@@ -7,8 +7,9 @@
 //
 
 import UIKit
+import CoreLocation
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate {
     
     // MARK: Properties
     
@@ -18,19 +19,35 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var summaryLabel: UILabel!
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var hourlyController: HourlyController!
-    
+    @IBOutlet weak var collectionView: UICollectionView!
+
     var forecast: Forecast?
+    var locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView.estimatedRowHeight = 44.0
         tableView.rowHeight = UITableViewAutomaticDimension
-        
-        Forecast().fetch(fetched, failure: failed)
-        // Do any additional setup after loading the view, typically from a nib.
+    
+
+        //let locationManager = CLLocationManager()
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
     }
+    
+    func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
+        
+    }
+    
+    func locationManager(manager: CLLocationManager, didUpdateToLocation newLocation: CLLocation, fromLocation oldLocation: CLLocation) {
+        locationManager.stopUpdatingLocation()
+        
+        Forecast().fetch(fetched, failure: failed, loc: newLocation)
+    }
+
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -40,6 +57,42 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func fetched(forecast: Forecast) {
         self.forecast = forecast
         self.tableView.reloadData()
+        self.collectionView.reloadData()
+        
+        
+        
+        if let _  = forecast.location {
+            CLGeocoder().reverseGeocodeLocation(forecast.location!, completionHandler: {(placemarks, error) -> Void in
+                
+                if error != nil {
+                    print("Reverse geocoder failed with error" + error!.localizedDescription)
+                    return
+                }
+                
+                if placemarks!.count > 0 {
+                    let pm = placemarks![0]
+                    print(pm.locality)
+                    
+                    var locationName = String()
+                    
+                    if let locality = pm.locality {
+                        locationName.appendContentsOf(locality)
+                    }
+                    
+                    if let adminArea = pm.administrativeArea {
+                        locationName.appendContentsOf(", " + adminArea)
+                    }
+                    
+            
+                    self.locationNameLabel.text = locationName
+                    
+                } else {
+                    print("Problem with the data received from geocoder")
+                }
+            })
+        } else {
+            print("Wtf")
+        }
         
         guard let currentForecast = forecast.currentForecast else {
             return;
@@ -48,7 +101,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if let temperature = currentForecast.temperature {
             
             let s = String(format: "%.0f", temperature)
-            temperatureLabel.text = s//substring(tempString, i: 2)
+            temperatureLabel.text = s  + "º"
         }
         
         
@@ -64,15 +117,61 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             humidityLabel.text = "Humidity: " + String(format: "%.0f", humidity*100) + "%"
         }
         
-        hourlyController.setHours(hours: forecast.hours)
 
     }
     
     func failed(error: String) {
         
     }
+}
+
+
+// MARK: CollectionView
+extension ViewController {
+    
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        
+        if let _ = forecast, let hours = forecast?.hours {
+            return hours.count
+        } else {
+            return 0
+        }
+    
+    }
+    
+    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
+        return 1
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        print("collectionView row:", indexPath.row)
+        let cellIdentifier = "HourCollectionViewCell"
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(cellIdentifier, forIndexPath: indexPath) as! HourCollectionViewCell
+        
+        guard let _ = forecast, let hours = forecast?.hours, let hour = hours[indexPath.row] as? Forecast.Hour else {
+            return cell
+        }
+        
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "h"
+        
+        cell.tempLabel.text = String(format:"%.0f", hour.temperature!) + "º"
+        
+        if let time = hour.time {
+            let hourString = dateFormatter.stringFromDate(time) + " PM"
+            cell.hourLabel.text = hourString
+        }
+        
+        if let precip = hour.precipProbability {
+                cell.precipLabel.text = String(format:"%.0f", precip) + "%"
+        }
+        
+        return cell
+        
+    }
 
 }
+
 
 // MARK: Tableview
 extension ViewController {
@@ -129,6 +228,7 @@ extension ViewController {
     func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
         return false
     }
+    
     
 }
 

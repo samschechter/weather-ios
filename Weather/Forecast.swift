@@ -8,10 +8,12 @@
 
 import Foundation
 import Alamofire
+import CoreLocation
 
 class Forecast {
     var currentForecast: Current?
     var hours = [Hour]()
+    var location: CLLocation?
     var days = [Day]()
     
     struct Current {
@@ -40,8 +42,11 @@ class Forecast {
         init(hour: NSDictionary){
             self.icon = hour["icon"] as? String
             self.temperature = hour["temperature"] as? Double
-            
             self.precipProbability = hour["precipProbability"] as? Double
+            
+            if let time = hour["time"] as? Double {
+                self.time = NSDate(timeIntervalSince1970: time)
+            }
         }
     }
     
@@ -77,18 +82,23 @@ class Forecast {
     
 
     
-    func fetch(success: (Forecast) -> Void, failure: (String) -> Void){
+    func fetch(success: (Forecast) -> Void, failure: (String) -> Void, loc: CLLocation){
+        let url = "https://api.forecast.io/forecast/ccefe2c2d217ae19e40a0c27fa09c6da/" + String(loc.coordinate.latitude) + "," + String(loc.coordinate.longitude)
+        print(url)
+        self.location = loc
         
-        Alamofire.request(.GET, "https://api.forecast.io/forecast/ccefe2c2d217ae19e40a0c27fa09c6da/38.8937225,-77.0760981", parameters: nil)
+        Alamofire.request(.GET, url, parameters: nil)
             .responseJSON { response in
                 print(response.request)  // original URL request
-                print(response.response) // URL response
-                print(response.data)     // server data
-                print(response.result)   // result of response serialization
+                //print(response.response) // URL response
+//                print(response.data)     // server data
+//                print(response.result)   // result of response serialization
                 
                 switch response.result {
                 case .Success(let data):
                     let json = response.result.value as! NSDictionary
+                    
+                    
                     
                     guard let currentlyObj = json["currently"] as? NSDictionary else {
                         return
