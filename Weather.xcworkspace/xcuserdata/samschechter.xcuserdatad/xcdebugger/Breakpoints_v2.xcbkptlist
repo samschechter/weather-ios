@@ -315,7 +315,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "90"
             endingLineNumber = "90"
-            landmarkName = "tableView(_:numberOfRowsInSection:)"
+            landmarkName = "fetched(_:)"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -331,7 +331,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "109"
             endingLineNumber = "109"
-            landmarkName = "tableView(_:cellForRowAtIndexPath:)"
+            landmarkName = "fetched(_:)"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -363,7 +363,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "47"
             endingLineNumber = "47"
-            landmarkName = "fetched(_:)"
+            landmarkName = "locationManager(_:didUpdateToLocation:fromLocation:)"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>

@@ -222,6 +222,8 @@ extension ViewController {
         let s = day.precipProbability!*100
         cell.precipLabel.text = String(format:"%.0f", s) + "%"
         
+        cell.weatherImage.image = UIImage(named: "cloud")
+        
         return cell
     }
     
