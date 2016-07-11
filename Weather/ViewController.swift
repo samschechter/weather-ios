@@ -9,9 +9,10 @@
 import UIKit
 import CoreLocation
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate, GooglePlacesAutocompleteDelegate {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate {//, GooglePlacesAutocompleteDelegate {
     
     // MARK: Properties
+    @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var humidityLabel: UILabel!
     @IBOutlet weak var windLabel: UILabel!
     @IBOutlet weak var temperatureLabel: UILabel!
@@ -34,6 +35,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
         locationManager.requestAlwaysAuthorization()
         locationManager.startUpdatingLocation()
+        
+        collectionView.backgroundColor = UIColor.clearColor()
+        collectionView.backgroundView = UIView()
+        
+        tableView.backgroundColor = UIColor.clearColor()
+        tableView.backgroundView = UIView()
     }
     
     func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
@@ -57,7 +64,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         self.tableView.reloadData()
         self.collectionView.reloadData()
         
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "EEEE, MMMM d"
         
+        dateLabel.text = dateFormatter.stringFromDate(NSDate())
         
         if let _  = forecast.location {
             CLGeocoder().reverseGeocodeLocation(forecast.location!, completionHandler: {(placemarks, error) -> Void in
@@ -197,7 +207,7 @@ extension ViewController {
         }
             
         let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "EEE"
+        dateFormatter.dateFormat = "EEE d"
         
         if let _ = day.time {
             let dayOfWeekString = dateFormatter.stringFromDate(day.time!)
@@ -222,9 +232,14 @@ extension ViewController {
         cell.precipLabel.text = String(format:"%.0f", s) + "%"
         
         if let iconKey = day.icon, let iconString = Forecast.Icons[iconKey] {
-            cell.weatherImage.image = UIImage(named: iconString)
+            let origImage = UIImage(named: iconString)
+            let tintedImage = origImage?.imageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
+            cell.weatherImage.image = tintedImage
+            cell.weatherImage.tintColor = UIColor.grayColor()
         }
         
+        cell.backgroundColor = UIColor.clearColor()
+        cell.backgroundView = UIView()
         
         return cell
     }
@@ -234,14 +249,14 @@ extension ViewController {
     }
     
     @IBAction func navigateToPlaceSelect(sender: AnyObject) {
-        let gpaViewController = GooglePlacesAutocomplete(
-            apiKey: "AIzaSyALqO46ja6RBhdSDZ9BlkPu8KZCvG6kyjA",
-            placeType: .Cities
-        )
-        
-        gpaViewController.placeDelegate = self // Conforms to GooglePlacesAutocompleteDelegate
-        
-        presentViewController(gpaViewController, animated: true, completion: nil)
+//        let gpaViewController = GooglePlacesAutocomplete(
+//            apiKey: "AIzaSyALqO46ja6RBhdSDZ9BlkPu8KZCvG6kyjA",
+//            placeType: .Cities
+//        )
+//        
+//        gpaViewController.placeDelegate = self // Conforms to GooglePlacesAutocompleteDelegate
+//        
+//        presentViewController(gpaViewController, animated: true, completion: nil)
         
     }
     
