@@ -132,4 +132,17 @@ class Forecast {
                 
         }
     }
+    
+    static var Icons: [String: String] = [
+        "clear-day": "sun",
+        "clear-night": "moon_waxing_crescent",
+        "rain": "cloud_rain",
+        "snow": "snowflake",
+        "sleet": "cloud_drizzle_alt",
+        "wind": "wind",
+        "cloudy": "cloud",
+        "partly-cloudy-day": "cloud_sun",
+        "partly-cloudy-night": "cloud_moon",
+        "fog": "cloud_fog"
+    ]
 }

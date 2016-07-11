@@ -9,11 +9,9 @@
 import UIKit
 import CoreLocation
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate, GooglePlacesAutocompleteDelegate {
     
     // MARK: Properties
-    
-    @IBOutlet weak var locationNameLabel: UILabel!
     @IBOutlet weak var humidityLabel: UILabel!
     @IBOutlet weak var windLabel: UILabel!
     @IBOutlet weak var temperatureLabel: UILabel!
@@ -84,7 +82,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     }
                     
             
-                    self.locationNameLabel.text = locationName
+                    self.title = locationName
+                    //self.locationNameLabel.text = locationName
                     
                 } else {
                     print("Problem with the data received from geocoder")
@@ -222,7 +221,10 @@ extension ViewController {
         let s = day.precipProbability!*100
         cell.precipLabel.text = String(format:"%.0f", s) + "%"
         
-        cell.weatherImage.image = UIImage(named: "cloud")
+        if let iconKey = day.icon, let iconString = Forecast.Icons[iconKey] {
+            cell.weatherImage.image = UIImage(named: iconString)
+        }
+        
         
         return cell
     }
@@ -231,6 +233,17 @@ extension ViewController {
         return false
     }
     
+    @IBAction func navigateToPlaceSelect(sender: AnyObject) {
+        let gpaViewController = GooglePlacesAutocomplete(
+            apiKey: "AIzaSyALqO46ja6RBhdSDZ9BlkPu8KZCvG6kyjA",
+            placeType: .Cities
+        )
+        
+        gpaViewController.placeDelegate = self // Conforms to GooglePlacesAutocompleteDelegate
+        
+        presentViewController(gpaViewController, animated: true, completion: nil)
+        
+    }
     
 }
 
