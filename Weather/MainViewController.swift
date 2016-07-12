@@ -9,7 +9,7 @@
 import UIKit
 import CoreLocation
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate {//, GooglePlacesAutocompleteDelegate {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate, GooglePlacesAutocompleteDelegate {
     
     // MARK: Properties
     @IBOutlet weak var dateLabel: UILabel!
@@ -22,6 +22,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
 
     var forecast: Forecast?
     var locationManager = CLLocationManager()
+    var gpaViewController: GooglePlacesAutocomplete?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,6 +42,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         tableView.backgroundColor = UIColor.clearColor()
         tableView.backgroundView = UIView()
+        
+        self.navigationController?.presentTransparentNavigationBar()
+        
     }
     
     func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
@@ -202,6 +206,9 @@ extension ViewController {
         let cellIdentifier = "DayTableViewCell"
         let cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! DayTableViewCell
         
+        
+        //cell.containerView.layer.borderColor = UIColor(white:0.93, alpha:1.0).CGColor//UIColor.lightGrayColor().CGColor
+        
         guard let _ = forecast, let days = forecast?.days, let day = days[indexPath.row] as? Forecast.Day else {
             return cell
         }
@@ -249,16 +256,58 @@ extension ViewController {
     }
     
     @IBAction func navigateToPlaceSelect(sender: AnyObject) {
-//        let gpaViewController = GooglePlacesAutocomplete(
-//            apiKey: "AIzaSyALqO46ja6RBhdSDZ9BlkPu8KZCvG6kyjA",
-//            placeType: .Cities
-//        )
-//        
-//        gpaViewController.placeDelegate = self // Conforms to GooglePlacesAutocompleteDelegate
-//        
-//        presentViewController(gpaViewController, animated: true, completion: nil)
+        self.gpaViewController = GooglePlacesAutocomplete(
+            apiKey: "AIzaSyALqO46ja6RBhdSDZ9BlkPu8KZCvG6kyjA",
+            placeType: .Cities
+        )
+        
+        self.gpaViewController!.placeDelegate = self // Conforms to GooglePlacesAutocompleteDelegate
+        
+        self.gpaViewController!.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Cancel, target: self, action: #selector(ViewController.locationViewClosed))
+        
+        self.gpaViewController!.navigationItem.title = "Select a Location"
+        self.gpaViewController!.navigationItem.leftBarButtonItem?.tintColor = UIColor.blackColor()
+        self.gpaViewController!.navigationController?.presentTransparentNavigationBar()
+        
+        let button = UIButton()
+        button.frame = CGRectMake(0, 0, 26, 26) //won't work if you don't set frame
+        button.setImage(UIImage(named: "my_location"), forState: .Normal)
+        button.addTarget(self, action: #selector(ViewController.useMyLocation), forControlEvents: .TouchUpInside)
+        
+        let barButton = UIBarButtonItem()
+        barButton.customView = button
+        self.gpaViewController!.navigationItem.rightBarButtonItem = barButton
+        
+        presentViewController(self.gpaViewController!, animated: true, completion: nil)
+    }
+    
+    func placeSelected(place: Place) {
+        place.getDetails { (details) in
+            
+            let location = CLLocation(latitude: details.latitude, longitude: details.longitude)
+            Forecast().fetch(self.fetched, failure: self.failed, loc: location)
+            
+            self.gpaViewController!.dismissViewControllerAnimated(true, completion: nil)
+        }
         
     }
     
+    func locationViewClosed(){
+        self.gpaViewController!.dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func useMyLocation(){
+        locationManager.startUpdatingLocation()
+        self.gpaViewController!.dismissViewControllerAnimated(true, completion: nil)
+    }
+}
+
+extension UINavigationController {
+    public func presentTransparentNavigationBar() {
+        navigationBar.setBackgroundImage(UIImage(), forBarMetrics:UIBarMetrics.Default)
+        navigationBar.translucent = true
+        navigationBar.shadowImage = UIImage()
+        setNavigationBarHidden(false, animated:true)
+    }
 }
 

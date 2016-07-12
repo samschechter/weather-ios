@@ -17,4 +17,5 @@ class DayTableViewCell: UITableViewCell {
     @IBOutlet weak var loLabel: UILabel!
     @IBOutlet weak var loTime: UILabel!
     @IBOutlet weak var precipLabel: UILabel!
+    @IBOutlet weak var containerView: UIView!
 }
