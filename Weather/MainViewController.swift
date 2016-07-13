@@ -255,6 +255,8 @@ extension ViewController {
         return false
     }
     
+    
+// MARK: Location select
     @IBAction func navigateToPlaceSelect(sender: AnyObject) {
         self.gpaViewController = GooglePlacesAutocomplete(
             apiKey: "AIzaSyALqO46ja6RBhdSDZ9BlkPu8KZCvG6kyjA",
